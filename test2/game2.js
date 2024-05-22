@@ -56,6 +56,8 @@ function startBattle() {
 function exploreDungeon() {
     alert('Exploring dungeon...');
     // Implement dungeon exploration logic here
+
+
     if (Math.random() > 0.5) {
         initiateNpcEncounter();
     } else {
@@ -64,13 +66,87 @@ function exploreDungeon() {
 }
 
 function collectResources() {
-    alert('Resources collected!');
-    // Implement resource collection logic here
-}
+  const currentLocation = "forest"; // Get the player's current location dynamically in your game
+
+  // Filter available resources based on location
+  const availableResources = resourceLocations[currentLocation];
+
+  if (availableResources.length === 0) {
+    alert("No resources available in this area.");
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * availableResources.length);
+  const resourceType = availableResources[randomIndex];
+  const quantityCollected = Math.ceil(Math.random() * 5); // Random quantity
+
+  resources[resourceType].quantity += quantityCollected;
+
+  alert(
+    `You collected ${quantityCollected} ${resources[resourceType].name} in the ${currentLocation}!`
+  );
 
 function manageSkills() {
-    alert('Managing skills...');
-    // Implement skill management logic here
+  const skills = {
+    swordfighting: { name: "Swordfighting", level: 1, experience: 0 },
+    archery: { name: "Archery", level: 1, experience: 0 },
+    defense: { name: "Defense", level: 1, experience: 0 },
+    magic: { name: "Magic", level: 1, experience: 0 },
+    alchemy: { name: "Alchemy", level: 1, experience: 0 },
+    lockpicking: { name: "Lockpicking", level: 1, experience: 0 },
+    stealth: { name: "Stealth", level: 1, experience: 0 }
+    // ... Add more skills as needed
+  };
+
+  const skillExperienceThresholds = {
+    1: 100,
+    2: 250,
+    3: 500,
+    4: 850,
+    5: 1300,
+    6: 1850,
+    7: 2500,
+    8: 3250,
+    9: 4100,
+    10: 5000 // Example max level
+    // ... Add more thresholds if you have more levels
+  };
+
+  // Check for level-ups and update skill levels
+  for (const skill in skills) {
+    while (
+      skills[skill].experience >=
+      skillExperienceThresholds[skills[skill].level]
+    ) {
+      skills[skill].level++;
+      alert(`Your ${skills[skill].name} skill has reached level ${skills[skill].level}!`);
+
+      // Optional: provide bonuses for leveling up a skill
+      if (skills[skill].name === "Swordfighting") {
+        player.attackPower += 5; // Increase player's attack power if Swordfighting levels up
+      }
+    }
+  }
+
+  // Display skills in a more organized way
+  let skillDisplay = "Your Skills:\n";
+  for (const skill in skills) {
+    skillDisplay += `- ${skills[skill].name}: Level ${skills[skill].level} (Experience: ${skills[skill].experience}/${skillExperienceThresholds[skills[skill].level]})\n`;
+  }
+  alert(skillDisplay);
+
+    // Optionally, allow the player to choose a skill to upgrade if they have enough experience
+    // ... 
+    }
+
+// (Example: Increasing Experience based on actions)
+function enemyDefeated() {
+  skills.swordfighting.experience += 50; // Example: Gain 50 swordfighting experience
+  // Check for level up and call manageSkills() to update UI if needed
+}
+
+
+
 }
 
 function interactButton(id) {
