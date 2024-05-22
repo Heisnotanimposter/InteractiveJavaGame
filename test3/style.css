@@ -1,0 +1,164 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #282c34;
+    font-family: Arial, sans-serif;
+    color: #fff;
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 300px; /* Adjust the height as needed */
+    background-color: lightgray; /* Optional background color */
+}
+
+#top-bar {
+    width: 100%;
+    background-color: #222;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    top: 0;
+}
+
+#content-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 70px; /* Adjust for fixed top-bar */
+}
+
+#game-container {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    border: 1px solid #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 100px; /* Adjust for fixed bottom-bar */
+}
+
+#character-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#character {
+    width: 50px;
+    height: 50px;
+    background-color: #00f;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#npc-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.npc {
+    width: 50px;
+    height: 50px;
+    background-color: #f00;
+    position: absolute;
+}
+
+#npc1 {
+    top: 20%;
+    left: 30%;
+}
+
+#npc2 {
+    top: 70%;
+    left: 60%;
+}
+
+#pentagon-container {
+    position: absolute;
+    top: 50px; /* Adjust the top position as needed */
+    right: 0;
+    transform: scale(0.7); /* Make the pentagons smaller */
+}
+
+.pentagon {
+    width: 100px;
+    height: 100px;
+    background-color: #4CAF50;
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    position: absolute;
+    transition: background-color 0.3s;
+    margin: 10px;
+}
+
+#reward-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #FFD700;
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+}
+
+.hidden {
+    display: none;
+}
+
+#bottom-bar {
+    width: 100%;
+    background-color: #222;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+}
+
+#status-bar {
+    width: 100%;
+    background-color: #444;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    bottom: 50px;
+}
+
+button {
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #666;
+}
+
+#inventory-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.inventory-item {
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #000;
+}
