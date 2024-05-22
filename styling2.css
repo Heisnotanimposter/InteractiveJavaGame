@@ -1,0 +1,92 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #282c34;
+    font-family: Arial, sans-serif;
+}
+
+#game-container {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    border: 1px solid #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#top-bar, #bottom-bar {
+    background-color: #222;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+}
+
+#main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.content {
+    display: none;
+    text-align: center;
+}
+
+#battle-screen {
+    display: block;
+}
+
+button {
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #666;
+}
+
+#pentagon-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: auto;
+}
+
+.pentagon {
+    width: 100px;
+    height: 100px;
+    background-color: #4CAF50;
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    position: absolute;
+    transition: background-color 0.3s;
+}
+
+#pentagon1 { top: 0; left: 50%; transform: translateX(-50%); }
+#pentagon2 { top: 50%; left: 100%; transform: translate(-50%, -50%); }
+#pentagon3 { top: 100%; left: 50%; transform: translate(-50%, -100%); }
+#pentagon4 { top: 50%; left: 0; transform: translate(50%, -50%); }
+#pentagon5 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+#reward-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #FFD700;
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+}
+
+.hidden {
+    display: none;
+}
+

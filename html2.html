@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Idle RPG</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="top-bar">
+            <button onclick="navigate('home')">Home</button>
+            <button onclick="navigate('inventory')">Inventory</button>
+            <button onclick="navigate('stats')">Stats</button>
+        </div>
+        <div id="main-content">
+            <div id="battle-screen" class="content">
+                <h2>Battle Screen</h2>
+                <div id="battle-log"></div>
+                <button onclick="startBattle()">Start Battle</button>
+            </div>
+            <div id="home-screen" class="content">
+                <h2>Home Screen</h2>
+                <p>Explore dungeons and interact with the environment.</p>
+                <button onclick="exploreDungeon()">Explore Dungeon</button>
+                <div id="npc-encounter" class="hidden">
+                    <p id="npc-dialogue"></p>
+                    <button onclick="npcResponse(1)">Response 1</button>
+                    <button onclick="npcResponse(2)">Response 2</button>
+                </div>
+            </div>
+            <div id="inventory-screen" class="content">
+                <h2>Inventory Screen</h2>
+                <p>Your items and equipment.</p>
+            </div>
+            <div id="stats-screen" class="content">
+                <h2>Stats Screen</h2>
+                <p>Your character stats and skills.</p>
+            </div>
+        </div>
+        <div id="bottom-bar">
+            <button onclick="collectResources()">Collect Resources</button>
+            <button onclick="manageSkills()">Manage Skills</button>
+        </div>
+        <div id="pentagon-container">
+            <div class="pentagon" id="pentagon1" onclick="interactButton(1)"></div>
+            <div class="pentagon" id="pentagon2" onclick="interactButton(2)"></div>
+            <div class="pentagon" id="pentagon3" onclick="interactButton(3)"></div>
+            <div class="pentagon" id="pentagon4" onclick="interactButton(4)"></div>
+            <div class="pentagon" id="pentagon5" onclick="interactButton(5)"></div>
+            <div id="reward-box" class="hidden">Reward Box!</div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
