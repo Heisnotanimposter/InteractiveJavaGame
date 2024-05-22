@@ -1,11 +1,75 @@
+
+let character = document.getElementById('character');
+let statusBar = document.getElementById('status');
+
+// Game state to track what's happening
+let currentAction = 'Standing';
+
+document.addEventListener('keydown', function (event) {
+  const key = event.key;
+
+  // Prevent simultaneous movement or actions
+  if (currentAction !== 'Standing') return; 
+
+  switch (key) {
+    case 'ArrowUp':
+      currentAction = 'Moving Up';
+      setStatus('Moving Up');
+      moveCharacter(0, -10);
+      break;
+    case 'ArrowDown':
+      currentAction = 'Moving Down';
+      setStatus('Moving Down');
+      moveCharacter(0, 10);
+      break;
+    case 'ArrowLeft':
+      currentAction = 'Moving Left';
+      setStatus('Moving Left');
+      moveCharacter(-10, 0);
+      break;
+    case 'ArrowRight':
+      currentAction = 'Moving Right';
+      setStatus('Moving Right');
+      moveCharacter(10, 0);
+      break;
+  }
+});
+
+// Keyup event to reset status
+document.addEventListener('keyup', () => {
+  currentAction = 'Standing';
+  setStatus('Standing');
+});
+
+function moveCharacter(dx, dy) {
+  const rect = character.getBoundingClientRect();
+  const parentRect = character.parentElement.getBoundingClientRect();
+  
+  const newTop = rect.top + dy;
+  const newLeft = rect.left + dx;
+  
+  // Check boundaries for smooth movement
+  const topBoundary = Math.max(parentRect.top, newTop);
+  const bottomBoundary = Math.min(parentRect.bottom - rect.height, topBoundary);
+
+  const leftBoundary = Math.max(parentRect.left, newLeft);
+  const rightBoundary = Math.min(parentRect.right - rect.width, leftBoundary);
+  
+  character.style.top = `${bottomBoundary - parentRect.top}px`;
+  character.style.left = `${rightBoundary - parentRect.left}px`;
+}
+
+function setStatus(action) {
+  statusBar.innerText = `Status: ${action}`;
+}
 function navigate(screen) {
     const screens = document.querySelectorAll('.content');
     screens.forEach(s => s.style.display = 'none');
     document.getElementById(`${screen}-screen`).style.display = 'block';
 }
 
-function startBattle() {
-    alert('Battle started!');
+function startGame() {
+    alert('Game started!');
     const enemies = [
         { agility: 3, name: 'enemy1', hp: 100 },
         { agility: 2, name: 'enemy2', hp: 80 }
@@ -25,7 +89,7 @@ function startBattle() {
             console.log('All enemies defeated! Battle won.');
         } else if (player.hp <= 0) {
             clearInterval(interval);
-            console.log('Player is defeated. Game over.');
+            console.log('Game over.');
         }
 
         // Enemies attack based on their agility
@@ -67,12 +131,14 @@ function exploreDungeon() {
 
 function collectResources() {
   const currentLocation = "forest"; // Get the player's current location dynamically in your game
+    setStatus('Collecting resources...in forest');
+    alert('we found tree!');
 
   // Filter available resources based on location
   const availableResources = resourceLocations[currentLocation];
 
   if (availableResources.length === 0) {
-    alert("No resources available in this area.");
+    alert("No resources available in this forest.");
     return;
   }
 
@@ -86,31 +152,37 @@ function collectResources() {
     `You collected ${quantityCollected} ${resources[resourceType].name} in the ${currentLocation}!`
   );
 
-function manageSkills() {
-  const skills = {
-    swordfighting: { name: "Swordfighting", level: 1, experience: 0 },
-    archery: { name: "Archery", level: 1, experience: 0 },
-    defense: { name: "Defense", level: 1, experience: 0 },
-    magic: { name: "Magic", level: 1, experience: 0 },
-    alchemy: { name: "Alchemy", level: 1, experience: 0 },
-    lockpicking: { name: "Lockpicking", level: 1, experience: 0 },
-    stealth: { name: "Stealth", level: 1, experience: 0 }
+const player = { name: "Tester", level: 5, experience: 1301 }; // Make sure it's defined
+
+
+const skills = {
+        swordfighting: { name: "Swordfighting", level: 1, experience: 0 },
+        archery: { name: "Archery", level: 1, experience: 0 },
+        defense: { name: "Defense", level: 1, experience: 0 },
+        magic: { name: "Magic", level: 1, experience: 0 },
+        alchemy: { name: "Alchemy", level: 1, experience: 0 },
+        lockpicking: { name: "Lockpicking", level: 1, experience: 0 },
+        stealth: { name: "Stealth", level: 1, experience: 0 }
     // ... Add more skills as needed
   };
-
-  const skillExperienceThresholds = {
-    1: 100,
-    2: 250,
-    3: 500,
-    4: 850,
-    5: 1300,
-    6: 1850,
-    7: 2500,
-    8: 3250,
-    9: 4100,
-    10: 5000 // Example max level
-    // ... Add more thresholds if you have more levels
+const skillExperienceThresholds = {
+        1: 100,
+        2: 250,
+        3: 500,
+        4: 850,
+        5: 1300,
+        6: 1850,
+        7: 2500,
+        8: 3250,
+        9: 4100,
+        10: 5000 // Example max level
+        // ... Add more thresholds if you have more levels
   };
+
+
+function manageSkills() {
+    setStatus('Managing skills...');
+    alert('Managing skills...');
 
   // Check for level-ups and update skill levels
   for (const skill in skills) {
@@ -143,6 +215,13 @@ function manageSkills() {
 function enemyDefeated() {
   skills.swordfighting.experience += 50; // Example: Gain 50 swordfighting experience
   // Check for level up and call manageSkills() to update UI if needed
+
+  if (enemyType === "goblin") {
+    skills.swordfighting.experience += 20;
+  } else if (enemyType === "skeletonArcher") {
+    skills.archery.experience += 30;
+  } 
+
 }
 
 

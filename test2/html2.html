@@ -14,10 +14,10 @@
             <button onclick="navigate('stats')">Stats</button>
         </div>
         <div id="main-content">
-            <div id="battle-screen" class="content">
-                <h2>Battle Screen</h2>
-                <div id="battle-log"></div>
-                <button onclick="startBattle()">Start Battle</button>
+            <div id="main-screen" class="content">
+                <h2>Interactive Idle RPG</h2>
+                <div id="player-log"></div>
+                <button onclick="startGame()">Start</button>
             </div>
             <div id="home-screen" class="content">
                 <h2>Home Screen</h2>
@@ -50,6 +50,9 @@
             <div class="pentagon" id="pentagon5" onclick="interactButton(5)"></div>
             <div id="reward-box" class="hidden">Reward Box!</div>
         </div>
+    </div>
+    <div id="status-bar">
+        <p id="status">Status: Standing</p>
     </div>
     <script src="game2.js"></script>
 </body>

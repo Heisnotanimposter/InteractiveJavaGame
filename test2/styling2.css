@@ -18,12 +18,75 @@ body {
     justify-content: space-between;
 }
 
-#top-bar, #bottom-bar {
+#character-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#character {
+    width: 50px;
+    height: 50px;
+    background-color: #00f;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#npc-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.npc {
+    width: 50px;
+    height: 50px;
+    background-color: #f00;
+    position: absolute;
+}
+
+#npc1 {
+    top: 20%;
+    left: 30%;
+}
+
+#npc2 {
+    top: 70%;
+    left: 60%;
+}
+
+#top-bar {
+    width: 100%;
     background-color: #222;
     padding: 10px;
     display: flex;
     justify-content: space-around;
+    position: relative;
+    top: 0;
 }
+
+#bottom-bar {
+    width: 100%;
+    background-color: #222;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    position: relative;
+    bottom: 0;
+}
+
+#status-bar {
+    width: 100%;
+    background-color: #444;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    bottom: 50px;
+}
+
 
 #main-content {
     display: flex;
@@ -89,3 +152,17 @@ button:hover {
 .hidden {
     display: none;
 }
+
+button {
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #666;
+}
+
+
