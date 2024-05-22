@@ -6,7 +6,51 @@ function navigate(screen) {
 
 function startBattle() {
     alert('Battle started!');
-    // Implement battle logic here
+    const enemies = [
+        { agility: 3, name: 'enemy1', hp: 100 },
+        { agility: 2, name: 'enemy2', hp: 80 }
+    ];
+    const player = { agility: 1, attackPower: 10, hp: 150 };
+
+    let turn = 0;
+    const interval = setInterval(() => {
+        console.clear();
+        console.log('turn ' + turn);
+        // Player attacks every turn
+        regPlayerAttack();
+        
+        // Check if all enemies are dead, end the interval
+        if (enemies.every(({ hp }) => hp <= 0)) {
+            clearInterval(interval);
+            console.log('All enemies defeated! Battle won.');
+        } else if (player.hp <= 0) {
+            clearInterval(interval);
+            console.log('Player is defeated. Game over.');
+        }
+
+        // Enemies attack based on their agility
+        enemies
+            .filter(({ agility }) => turn % agility === 0)
+            .forEach(enemy => enemyAttack(enemy));
+        
+        turn++;
+    }, 1000);
+
+    function regPlayerAttack() {
+        console.log('Player attacking...');
+        const target = enemies.find(enemy => enemy.hp > 0);
+        if (target) {
+            target.hp -= player.attackPower;
+            console.log(`Player attacked ${target.name} for ${player.attackPower} damage. ${target.name} has ${target.hp} HP left.`);
+        }
+    }
+
+    function enemyAttack(enemy) {
+        const enemyAttackPower = 5; // Define enemy attack power
+        console.log(`${enemy.name} attacking...`);
+        player.hp -= enemyAttackPower;
+        console.log(`${enemy.name} attacked Player for ${enemyAttackPower} damage. Player has ${player.hp} HP left.`);
+    }
 }
 
 function exploreDungeon() {
@@ -76,3 +120,4 @@ function npcResponse(responseId) {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('reward-box').style.display = 'none';
 });
+

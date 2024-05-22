@@ -69,10 +69,10 @@ button:hover {
     transition: background-color 0.3s;
 }
 
-#pentagon1 { top: 0; left: 50%; transform: translateX(-50%); }
-#pentagon2 { top: 50%; left: 100%; transform: translate(-50%, -50%); }
+#pentagon1 { top: 0; left: 50%; transform: translate(-50%, 0); }
+#pentagon2 { top: 50%; left: 100%; transform: translate(-100%, -50%); }
 #pentagon3 { top: 100%; left: 50%; transform: translate(-50%, -100%); }
-#pentagon4 { top: 50%; left: 0; transform: translate(50%, -50%); }
+#pentagon4 { top: 50%; left: 0; transform: translate(0, -50%); }
 #pentagon5 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
 #reward-box {
@@ -89,4 +89,3 @@ button:hover {
 .hidden {
     display: none;
 }
-
