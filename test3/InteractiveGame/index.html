@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InteractiveJavaGame</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="content-container">
+        <div id="top-bar">
+            <button onclick="collectResources()">Refresh Environment</button>
+            <p>InteractiveJavaGame</p>
+            <button onclick="manageSkills()">Manage Skills</button>
+        </div>
+        <div id="game-container">
+            <div id="character-container">
+                <div id="character"></div>
+            </div>
+            <div id="npc-container">
+                <div class="npc" id="npc1"></div>
+                <div class="npc" id="npc2"></div>
+            </div>
+        </div>
+        <div id="home-screen" class="content">
+            <h2>Collecting Elements</h2>
+            <p>Explore nature and interact with the elements.</p>
+            <button onclick="exploreDungeon()">Explore</button>
+            <script src="script.js"></script>
+            <script>
+                function exploreDungeon() {
+                    alert('Exploring...');
+                    // Implement the function's logic here
+                    if (Math.random() > 0.5) {
+                        alert('Something interesting happens!');
+                    } else {
+                        alert("Nothing happened this time. Keep exploring!");
+                    }
+                }
+                function collectResources() {
+                    alert('Resources have been refreshed!');
+                    // Add logic for resource collection
+                }
+                function manageSkills() {
+                    alert('Managing your skills...');
+                    // Add logic for skill management
+                }
+            </script>
+        </div>
+        <div id="npc-encounter" class="hidden">
+            <p id="npc-dialogue"></p>
+            <button onclick="npcResponse(1)">Response 1</button>
+            <button onclick="npcResponse(2)">Response 2</button>
+        </div>
+        <div id="inventory-screen" class="content hidden">
+            <h2>Inventory Screen</h2>
+            <p>Your items and equipment.</p>
+            <div id="inventory-container"></div>
+            <div id="pentagon-container">
+                <div class="pentagon" id="pentagon1" onclick="interactButton(1)"></div>
+                <div class="pentagon" id="pentagon2" onclick="interactButton(2)"></div>
+                <div class="pentagon" id="pentagon3" onclick="interactButton(3)"></div>
+                <div class="pentagon" id="pentagon4" onclick="interactButton(4)"></div>
+                <div class="pentagon" id="pentagon5" onclick="interactButton(5)"></div>
+                <div id="reward-box" class="hidden">Reward Box!</div>
+            </div>
+        </div>
+        <div id="stats-screen" class="content hidden">
+            <h2>Stats Screen</h2>
+            <p>Your character stats and skills.</p>
+            <p>{
+                SolarSysetm: 
+                { name: "SolarSysetm", level: 1, experience: 0 },
+                AlphaCentauri: { name: "AlphaCentauri", level: 1, experience: 0 },
+                Glise: { name: "Glise", level: 1, experience: 0 },
+                UnknownSystem1: { name: "UnknownSystem1", level: 1, experience: 0 },
+                UnknownSystem2: { name: "UnknownSystem2", level: 1, experience: 0 },
+                UnknownSystem3: { name: "UnknownSystem3", level: 1, experience: 0 },
+                UnknownSystem4: { name: "UnknownSystem4", level: 1, experience: 0 }
+            }</p>
+            <div id="skillDisplay"></div>
+        </div>
+    </div>
+    <div id="bottom-bar">
+        <button onclick="navigate('home')">Home</button>
+        <button onclick="navigate('inventory')">Inventory</button>
+        <button onclick="navigate('stats')">Stats</button>
+    </div>
+    <div id="status-bar">
+        <p id="status">Status: Standing</p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+

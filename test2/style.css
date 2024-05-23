@@ -1,0 +1,49 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #282c34;
+}
+
+canvas {
+    border: 1px solid #ffffff;
+}
+
+#game-rules {
+    position: fixed;
+    bottom: 70px; /* Adjust based on your layout */
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+}
+
+#gameCanvas {
+    width: 800px;
+    height: 600px;
+}
+
+#menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+button {
+    margin: 5px;
+}
+#title {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+}
+

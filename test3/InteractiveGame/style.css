@@ -160,5 +160,46 @@ button:hover {
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: #000;
+    color: #fff;
 }
+
+#inventory-screen {
+    position: relative; /* Ensures child elements like #pentagon-container can be positioned relative to this container */
+    width: 600px; /* Adjust width as necessary */
+    height: 500px; /* Adjust height based on content */
+    /*background-color: #f3f3f3; /* Just an example */
+    margin: 20px auto; /* Centers the screen horizontally */
+    padding: 20px;
+    display: none; /* Hidden by default, make sure to toggle visibility appropriately */
+}
+
+#pentagon-container {
+    position: absolute;
+    bottom: 10px; /* Positions the container at the bottom of the inventory screen */
+    left: 0;
+    right: 0;
+    margin: auto; /* Centers horizontally */
+    display: flex;
+    justify-content: space-around; /* Distributes pentagons evenly */
+}
+
+.pentagon {
+    width: 60px; /* Smaller size for inventory context */
+    height: 60px; /* Smaller size for inventory context */
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    background-color: #4CAF50; /* Example color */
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#reward-box {
+    display: none; /* Initially hidden, display it when needed */
+    position: absolute;
+    top: -50px; /* Positions above the pentagons */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #FFD700;
+    padding: 10px;
+    border-radius: 5px;
+}
+
