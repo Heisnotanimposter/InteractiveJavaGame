@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Minigame - Aiming & Shot Types</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .hud-element { /* Common style for HUD items */
+            position: absolute;
+            font-family: 'Arial', sans-serif;
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            color: #555;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        #power-meter {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            width: 250px;
+            height: 25px;
+            background-color: #e0e0e0;
+            border: 2px solid #b0bec5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            z-index: 10;
+        }
+        #power-bar {
+            height: 100%;
+            background-color: #81c784;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.1s ease;
+        }
+        #stage-display {
+            top: 20px;
+            left: 20px;
+        }
+        #distance-display {
+            top: 60px;
+            left: 20px;
+        }
+         #message-display {
+            top: 100px;
+            left: 20px;
+            font-weight: bold;
+            color: #333;
+            min-width: 150px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 70px;
+            left: 20px;
+            font-size: 14px;
+            color: #777;
+            padding: 10px 15px;
+            background-color: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            line-height: 1.5;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+            z-index: 10;
+            max-width: 250px;
+        }
+
+        /* Container for bottom center controls */
+        #bottom-center-controls {
+            position: absolute;
+            bottom: 20px; /* Adjust bottom slightly */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex; /* Use flexbox for layout */
+            gap: 15px; /* Space between buttons */
+            align-items: center; /* Align items vertically */
+            z-index: 10;
+        }
+
+        /* Base button style */
+        .control-button {
+            padding: 10px 20px; /* Slightly smaller padding */
+            font-size: 16px; /* Slightly smaller font */
+            cursor: pointer;
+            border: none;
+            color: white;
+            border-radius: 8px; /* Slightly smaller radius */
+            box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+            transition: all 0.2s ease;
+            font-family: 'Arial', sans-serif;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.4);
+        }
+        .control-button:hover {
+            box-shadow: 0 5px 10px rgba(0,0,0,0.35);
+            transform: translateY(-1px);
+        }
+         .control-button:active {
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            transform: translateY(0);
+        }
+
+        #swing-button {
+            background: linear-gradient(to bottom, #4CAF50, #388E3C); /* Green */
+            padding: 12px 25px; /* Keep swing button slightly larger */
+            font-size: 18px;
+        }
+        #swing-button:hover {
+             background: linear-gradient(to bottom, #66BB6A, #43A047);
+             transform: translateY(-2px); /* Keep slightly larger lift */
+        }
+         #swing-button:active {
+             background: linear-gradient(to bottom, #388E3C, #2E7D32);
+             transform: translateY(0);
+         }
+
+        #shot-type-button {
+            background: linear-gradient(to bottom, #2196F3, #1976D2); /* Blue */
+            min-width: 100px; /* Ensure enough width for text */
+            text-align: center;
+        }
+         #shot-type-button:hover {
+             background: linear-gradient(to bottom, #64B5F6, #1E88E5);
+        }
+         #shot-type-button:active {
+             background: linear-gradient(to bottom, #1976D2, #1565C0);
+         }
+
+
+        #angle-control-container {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            width: 250px;
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            cursor: ew-resize;
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        #angle-slider {
+            position: relative;
+            top: 0;
+            width: 16px;
+            height: 22px;
+            background-color: #555;
+            border-radius: 8px;
+            transform: translateX(-50%);
+            transition: left 0.1s ease;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="power-meter">
+        <div id="power-bar"></div>
+    </div>
+    <div id="stage-display" class="hud-element">Stage: 1</div>
+    <div id="distance-display" class="hud-element">Distance: 0.00 m</div>
+    <div id="message-display" class="hud-element"></div>
+    <div id="instructions">Click/drag power meter & angle bar. Click "Swing!"</div>
+
+    <div id="angle-control-container">
+        <div id="angle-slider"></div>
+    </div>
+    <div id="bottom-center-controls">
+         <button id="shot-type-button" class="control-button">Shot: High</button>
+         <button id="swing-button" class="control-button">Swing!</button>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+    <script>
+        // --- Scene Setup ---
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 8, 18);
+        camera.lookAt(0, 0, 0);
+
+        // --- Lighting ---
+        const ambientLight = new THREE.HemisphereLight(0xffffff, 0x404040, 0.8);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        directionalLight.position.set(15, 25, 10);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 60;
+        directionalLight.shadow.camera.left = -40;
+        directionalLight.shadow.camera.right = 40;
+        directionalLight.shadow.camera.top = 40;
+        directionalLight.shadow.camera.bottom = -40;
+        scene.add(directionalLight);
+
+        // --- Ground ---
+        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x66bb6a });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // --- Ball ---
+        const ballGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const ballMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const ball = new THREE.Mesh(ballGeometry, ballMaterial);
+        ball.castShadow = true;
+        scene.add(ball);
+
+        // --- Camera Controls ---
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enableZoom = false;
+        controls.minDistance = 5;
+        controls.maxDistance = 40;
+        controls.maxPolarAngle = Math.PI / 2 - 0.1;
+
+        // --- Hole and Flag ---
+        const holeGeometry = new THREE.CylinderGeometry(1, 1, 0.1, 32);
+        const holeMaterial = new THREE.MeshLambertMaterial({ color: 0x222222 });
+        const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+        hole.receiveShadow = true;
+        scene.add(hole);
+
+        const flagPoleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
+        const flagPoleMaterial = new THREE.MeshLambertMaterial({ color: 0x888888 });
+        const flagPole = new THREE.Mesh(flagPoleGeometry, flagPoleMaterial);
+        flagPole.castShadow = true;
+        scene.add(flagPole);
+
+        const flagGeometry = new THREE.PlaneGeometry(0.4, 0.3);
+        const flagMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000, side: THREE.DoubleSide });
+        const flag = new THREE.Mesh(flagGeometry, flagMaterial);
+        flag.castShadow = true;
+        scene.add(flag);
+
+        // --- Golf Club ---
+        const clubHeadGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.5);
+        const clubHandleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 1.5, 8);
+        const clubMaterial = new THREE.MeshLambertMaterial({ color: 0xaaaaaa });
+        const clubHead = new THREE.Mesh(clubHeadGeometry, clubMaterial); clubHead.castShadow = true;
+        const clubHandle = new THREE.Mesh(clubHandleGeometry, clubMaterial); clubHandle.castShadow = true;
+        const golfClub = new THREE.Group();
+        clubHandle.position.y = 0.75; clubHead.position.y = 0.05; clubHead.position.z = 0.25;
+        golfClub.add(clubHead); golfClub.add(clubHandle);
+        golfClub.rotation.x = -Math.PI / 12; // Default resting angle
+        golfClub.visible = false; // Start hidden, make visible in setupStage
+        scene.add(golfClub);
+
+        // --- Game Logic Variables ---
+        let currentStage = 1;
+        let swingPower = 0;
+        let ballVelocity = new THREE.Vector3();
+        let isBallMoving = false;
+        let golfClubAngle = 0; // Degrees
+        let isAdjustingAngle = false;
+        let isSettingPower = false;
+        let distance = 0;
+        const initialBallPosition = new THREE.Vector3(0, 0.5, 0);
+        const gravity = new THREE.Vector3(0, -9.8, 0);
+        const friction = 0.98;
+        const stopThreshold = 0.1;
+        const stageCompletionThreshold = 1.5;
+        let holePosition = new THREE.Vector3();
+        let currentShotType = 'high'; // 'high' or 'low'
+
+        // --- DOM Elements ---
+        const powerBar = document.getElementById('power-bar');
+        const swingButton = document.getElementById('swing-button');
+        const angleControlContainer = document.getElementById('angle-control-container');
+        const angleSlider = document.getElementById('angle-slider');
+        const distanceDisplay = document.getElementById('distance-display');
+        const stageDisplay = document.getElementById('stage-display');
+        const messageDisplay = document.getElementById('message-display');
+        const powerMeter = document.getElementById('power-meter');
+        const shotTypeButton = document.getElementById('shot-type-button'); // Get the new button
+
+        // --- Utility Functions ---
+        function showMessage(text, duration = 2000) {
+            messageDisplay.textContent = text;
+            messageDisplay.style.opacity = 1;
+            setTimeout(() => { messageDisplay.style.opacity = 0; }, duration);
+        }
+
+        function resetControls() {
+            swingPower = 0;
+            powerBar.style.width = '0%';
+            isSettingPower = false;
+            golfClubAngle = 0;
+            const resetSliderPosition = 50;
+            angleSlider.style.left = `${resetSliderPosition}%`;
+            golfClub.rotation.y = 0; // Reset visual club angle
+            isAdjustingAngle = false;
+            distance = 0;
+            const initialDistanceToHole = ball.position.distanceTo(holePosition);
+            distanceDisplay.textContent = `Shot: 0.00m | Hole: ${initialDistanceToHole.toFixed(2)}m`;
+            // Don't reset shot type here, keep player's selection
+        }
+
+        // --- Stage Setup ---
+        function setupStage(stageNum) {
+            currentStage = stageNum;
+            stageDisplay.textContent = `Stage: ${currentStage}`;
+
+            const minX = -30, maxX = 30;
+            const minZ = -40, maxZ = -15;
+            let holeX, holeZ;
+            do {
+                holeX = Math.random() * (maxX - minX) + minX;
+                holeZ = Math.random() * (maxZ - minZ) + minZ;
+            } while (Math.sqrt(holeX*holeX + holeZ*holeZ) < 10);
+
+            holePosition.set(holeX, 0.05, holeZ);
+            hole.position.copy(holePosition);
+            flagPole.position.set(holePosition.x, 1, holePosition.z);
+            flag.position.set(holePosition.x + 0.2, 1.85, holePosition.z);
+
+            ball.position.copy(initialBallPosition);
+            ballVelocity.set(0, 0, 0);
+            if (ball.userData.velocity) ball.userData.velocity.set(0,0,0); else ball.userData.velocity = new THREE.Vector3();
+            isBallMoving = false;
+
+            resetControls(); // Reset power, angle, distance display
+
+            // Make club visible and position it for aiming
+            golfClub.position.set(ball.position.x, ball.position.y, ball.position.z + 0.7);
+            golfClub.rotation.y = golfClubAngle * Math.PI / 180; // Set rotation based on reset angle (0)
+            golfClub.visible = true; // *** Make club visible for aiming ***
+
+            controls.target.set(0,0,0);
+
+            console.log(`Stage ${currentStage} started. Hole at:`, holePosition.x.toFixed(1), holePosition.z.toFixed(1));
+        }
+
+        // --- Swing Action ---
+        function swingBall() {
+             if (!isBallMoving && swingPower > 0) {
+                // Club is already visible and rotated from aiming state
+                isBallMoving = true;
+                golfClub.visible = false; // Hide club immediately before animation for cleaner look
+
+                const powerFactor = 60;
+                let launchAngleVertical; // Determine launch angle based on shot type
+
+                if (currentShotType === 'high') {
+                    launchAngleVertical = Math.PI / 6; // 30 degrees for high shot
+                } else { // 'low'
+                    launchAngleVertical = Math.PI / 36; // 5 degrees for low shot
+                }
+
+                const angleRadiansHorizontal = golfClubAngle * Math.PI / 180;
+                const direction = new THREE.Vector3(-Math.sin(angleRadiansHorizontal), 0, -Math.cos(angleRadiansHorizontal));
+
+                ballVelocity.set(
+                    direction.x * swingPower * powerFactor * Math.cos(launchAngleVertical),
+                    swingPower * powerFactor * Math.sin(launchAngleVertical),
+                    direction.z * swingPower * powerFactor * Math.cos(launchAngleVertical)
+                );
+                ball.userData.velocity = ballVelocity.clone();
+
+                // Optional: Simplified swing animation (no visual club during ball movement)
+                // If you want the GSAP animation back, uncomment it and adjust visibility logic
+                /*
+                if (typeof gsap !== 'undefined') {
+                    // Position club just before animation starts
+                    golfClub.position.set(ball.position.x, ball.position.y, ball.position.z + 0.7);
+                    golfClub.rotation.y = angleRadiansHorizontal;
+                    golfClub.visible = true;
+
+                    gsap.to(golfClub.rotation, { duration: 0.15, x: golfClub.rotation.x - Math.PI / 8, ease: "power1.in",
+                        onComplete: () => {
+                            gsap.to(golfClub.rotation, { duration: 0.1, x: golfClub.rotation.x + Math.PI / 4, ease: "power2.out",
+                                onComplete: () => {
+                                    gsap.to(golfClub.rotation, { duration: 0.4, x: -Math.PI / 12, ease: "power1.out", delay: 0.3,
+                                        onComplete: () => { golfClub.visible = false; } // Hide after animation
+                                    });
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    console.error("GSAP library not loaded!");
+                }
+                */
+            }
+        }
+
+        // --- Shot Type Toggle ---
+        function toggleShotType() {
+            if (isBallMoving) return; // Don't change type mid-shot
+
+            if (currentShotType === 'high') {
+                currentShotType = 'low';
+                shotTypeButton.textContent = 'Shot: Low';
+            } else {
+                currentShotType = 'high';
+                shotTypeButton.textContent = 'Shot: High';
+            }
+            console.log("Shot type set to:", currentShotType);
+        }
+
+
+        // --- Input Event Listeners ---
+        powerMeter.addEventListener('mousedown', onPowerMeterMouseDown);
+        window.addEventListener('mouseup', onPowerMeterMouseUp);
+        window.addEventListener('mousemove', onPowerMeterMouseMove);
+        angleControlContainer.addEventListener('mousedown', onAngleControlMouseDown);
+        window.addEventListener('mouseup', onAngleControlMouseUp);
+        window.addEventListener('mousemove', onAngleControlMouseMove);
+        swingButton.addEventListener('click', swingBall);
+        shotTypeButton.addEventListener('click', toggleShotType); // Listener for the new button
+
+
+        // --- Input Handlers ---
+        function onPowerMeterMouseDown(event) {
+            if (event.target === powerMeter || event.target === powerBar) {
+                 if (!isBallMoving) {
+                    isSettingPower = true;
+                    const rect = powerMeter.getBoundingClientRect();
+                    const mouseX = event.clientX - rect.left;
+                    swingPower = Math.max(0, Math.min(1, mouseX / rect.width));
+                    powerBar.style.width = `${swingPower * 100}%`;
+                 }
+            }
+        }
+        function onPowerMeterMouseUp(event) { if (isSettingPower) { isSettingPower = false; } }
+        function onPowerMeterMouseMove(event) {
+            if (isSettingPower) {
+                const rect = powerMeter.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                swingPower = Math.max(0, Math.min(1, mouseX / rect.width));
+                powerBar.style.width = `${swingPower * 100}%`;
+            }
+        }
+        function onAngleControlMouseDown(event) {
+            if (event.target === angleControlContainer || event.target === angleSlider) {
+                if (!isBallMoving) { isAdjustingAngle = true; }
+            }
+        }
+        function onAngleControlMouseUp() { if (isAdjustingAngle) { isAdjustingAngle = false; } }
+        function onAngleControlMouseMove(event) {
+            if (isAdjustingAngle) {
+                const rect = angleControlContainer.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const angleRange = 60;
+                let positionRatio = Math.max(0, Math.min(1, mouseX / rect.width));
+                golfClubAngle = (positionRatio - 0.5) * 2 * angleRange;
+
+                // *** Update visual club rotation in real-time ***
+                if (!isBallMoving) {
+                     golfClub.rotation.y = golfClubAngle * Math.PI / 180;
+                     // Ensure club is positioned correctly relative to ball during aiming
+                     golfClub.position.set(ball.position.x, ball.position.y, ball.position.z + 0.7);
+                }
+
+                angleSlider.style.left = `${positionRatio * 100}%`;
+            }
+        }
+
+
+        // --- Physics Simulation ---
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const deltaTime = clock.getDelta();
+            controls.update();
+
+            if (isBallMoving) {
+                 // Hide club if ball is moving (ensure it's hidden)
+                if (golfClub.visible) golfClub.visible = false;
+
+                ball.userData.velocity.addScaledVector(gravity, deltaTime);
+                ball.position.addScaledVector(ball.userData.velocity, deltaTime);
+
+                if (ball.position.y < initialBallPosition.y) {
+                    ball.position.y = initialBallPosition.y;
+                    ball.userData.velocity.y *= -0.3;
+                    ball.userData.velocity.x *= friction;
+                    ball.userData.velocity.z *= friction;
+
+                    if (ball.userData.velocity.lengthSq() < stopThreshold * stopThreshold) {
+                        isBallMoving = false;
+                        ball.userData.velocity.set(0, 0, 0);
+
+                        const distanceToHole = ball.position.distanceTo(holePosition);
+                        const shotDistance = ball.position.distanceTo(initialBallPosition);
+                        distanceDisplay.textContent = `Shot: ${shotDistance.toFixed(2)}m | Hole: ${distanceToHole.toFixed(2)}m`;
+
+                        if (distanceToHole <= stageCompletionThreshold) {
+                            showMessage(`Stage ${currentStage} Complete!`, 2500);
+                            setTimeout(() => { setupStage(currentStage + 1); }, 2600);
+                        } else {
+                            showMessage("Try again!", 1900);
+                            setTimeout(() => {
+                                ball.position.copy(initialBallPosition);
+                                resetControls();
+                                // Make club visible again for the next shot
+                                golfClub.position.set(ball.position.x, ball.position.y, ball.position.z + 0.7);
+                                golfClub.rotation.y = golfClubAngle * Math.PI / 180; // Use reset angle
+                                golfClub.visible = true;
+                            }, 2000);
+                        }
+                    }
+                } else {
+                     ball.userData.velocity.multiplyScalar(friction);
+                }
+            } else {
+                 // Ensure club is visible and positioned correctly when ball is NOT moving
+                 if (!golfClub.visible) golfClub.visible = true;
+                 golfClub.position.set(ball.position.x, ball.position.y, ball.position.z + 0.7);
+                 // Rotation is handled by onAngleControlMouseMove
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // --- Handle Window Resize ---
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- Initialize Game ---
+        setupStage(1);
+        animate();
+    </script>
+</body>
+</html>
