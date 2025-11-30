@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniverseRPG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="game-container"></div>
+    <div id="ui-layer">
+        <div id="hud-top-left">
+            <div id="coordinates">Pos: 0, 0, 0</div>
+            <div id="speed">Speed: 0</div>
+            <div id="system-status">Status: NOMINAL</div>
+        </div>
+        <div id="hud-bottom-left">
+            <div class="bar-container">
+                <div class="bar-label">ENERGY</div>
+                <div class="bar-bg">
+                    <div id="energy-bar" class="bar-fill"></div>
+                </div>
+            </div>
+        </div>
+        <div id="controls-hint">WASD: Move | Q/E: Pitch | Z/C: Roll | R: Up | Shift: Down | SPACE: Brake/Attack | M: Map (click to autopilot) | I: Axis | U: Upgrades | J: Missions | E: Station | T: NPC Trade | F/L: Land | P: Cancel Autopilot</div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
