@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community - Interactive Game Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+
+    <header>
+        <div class="header-nav">
+            <a href="index.html" class="nav-link">Home</a>
+            <a id="auth-link" href="login.html" class="nav-link">Login</a>
+        </div>
+        <h1>Community Board</h1>
+        <p class="subtitle">Share your achievements and thoughts.</p>
+    </header>
+
+    <main>
+        <div class="community-container">
+            <!-- Create Post Form (Hidden if not logged in) -->
+            <div class="post-form" id="create-post-container" style="display: none;">
+                <h2 class="game-title">Create Post</h2>
+                <div class="form-group">
+                    <input type="text" id="post-title" class="form-control" placeholder="Title">
+                </div>
+                <div class="form-group">
+                    <textarea id="post-content" class="form-control" rows="4"
+                        placeholder="What's on your mind?"></textarea>
+                </div>
+                <button onclick="createPost()" class="play-btn">Post</button>
+            </div>
+
+            <!-- Posts List -->
+            <div id="posts-list" class="post-list">
+                <!-- Posts will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        const authLink = document.getElementById('auth-link');
+        const createPostContainer = document.getElementById('create-post-container');
+
+        if (token) {
+            authLink.textContent = `Logout (${username})`;
+            authLink.href = '#';
+            authLink.addEventListener('click', () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.reload();
+            });
+            createPostContainer.style.display = 'block';
+        }
+
+        async function loadPosts() {
+            try {
+                const res = await fetch('/api/community');
+                const data = await res.json();
+                const container = document.getElementById('posts-list');
+                container.innerHTML = data.posts.map(post => `
+                    <div class="post-card">
+                        <div class="post-meta">
+                            <span>@${post.username}</span>
+                            <span>${new Date(post.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <h3 class="post-title">${post.title}</h3>
+                        <div class="post-content">${post.content}</div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function createPost() {
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+
+            if (!title || !content) return alert('Please fill in all fields');
+
+            try {
+                const res = await fetch('/api/community', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username, // In real app, verify token on server
+                        title,
+                        content
+                    })
+                });
+
+                if (res.ok) {
+                    document.getElementById('post-title').value = '';
+                    document.getElementById('post-content').value = '';
+                    loadPosts();
+                } else {
+                    alert('Failed to post');
+                }
+            } catch (err) {
+                alert('Error posting');
+            }
+        }
+
+        loadPosts();
+    </script>
+</body>
+
+</html>
