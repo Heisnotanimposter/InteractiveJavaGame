@@ -65,25 +65,73 @@
             flex-direction: column;
         }
 
-        #controls-hint {
+        #chat-container {
             position: absolute;
             bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px;
-            border-radius: 8px;
-            text-align: right;
+            left: 20px;
+            width: 300px;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
         }
 
-        #loading {
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .chat-msg {
+            font-size: 14px;
+            margin-bottom: 4px;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        #chat-input {
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #555;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        #inventory-bar {
             position: absolute;
-            top: 50%;
+            bottom: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 0 0 10px black;
-            display: none;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 8px;
+            pointer-events: auto;
+        }
+
+        .inv-slot {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #555;
+            margin: 0 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .inv-slot.active {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
@@ -105,6 +153,18 @@
                 </div>
             </div>
 
+            <div id="chat-container">
+                <div id="chat-messages"></div>
+                <input type="text" id="chat-input" placeholder="Press Enter to chat...">
+            </div>
+
+            <div id="inventory-bar">
+                <div class="inv-slot active" data-type="grass" title="Grass">🟩</div>
+                <div class="inv-slot" data-type="stone" title="Stone">🪨</div>
+                <div class="inv-slot" data-type="dirt" title="Dirt">🟫</div>
+                <div class="inv-slot" data-type="wood" title="Wood">🪵</div>
+            </div>
+
             <div id="controls-hint">
                 <p><strong>WASD</strong> to Move</p>
                 <p><strong>Space</strong> to Jump</p>
@@ -115,11 +175,14 @@
         </div>
     </div>
 
+    <!-- Load Socket.io and Multiplayer Client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../../assets/js/multiplayer.js"></script>
+
     <script type="module">
         import * as THREE from 'https://cdn.skypack.dev/three@0.128.0';
 
         // --- Perlin Noise Implementation ---
-        // Simple implementation for terrain generation
         const PERLIN_YWRAPB = 4; const PERLIN_YWRAP = 1 << PERLIN_YWRAPB;
         const PERLIN_ZWRAPB = 8; const PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB;
         const PERLIN_SIZE = 4095;
@@ -130,15 +193,12 @@
         function noise(x) {
             let xi = Math.floor(x);
             let xf = x - xi;
-            let rxf;
             let n1, n2, n3;
-
             let r = 0;
             let ampl = 0.5;
-
             for (let o = 0; o < perlin_octaves; o++) {
                 let of = xi + (xf * (1 << o));
-                rxf = of - Math.floor(of);
+                let rxf = of - Math.floor(of);
                 n1 = (Math.floor(of) & PERLIN_SIZE);
                 n1 += (n1 >> PERLIN_YWRAPB) & PERLIN_SIZE;
                 n2 = n1 + 1;
@@ -151,8 +211,6 @@
         }
 
         function noise2d(x, y) {
-            // Simple 2D noise combining 1D noise for speed in this demo
-            // Real Simplex/Perlin 2D is better but longer to implement inline
             return (noise(x * 0.1 + y * 0.1) + noise(x * 0.3 - y * 0.2) * 0.5) / 1.5;
         }
 
@@ -160,11 +218,16 @@
         let scene, camera, renderer;
         let player;
         const CHUNK_SIZE = 16;
-        const RENDER_DISTANCE = 3; // Radius of chunks to render
+        const RENDER_DISTANCE = 3;
         const BLOCK_SIZE = 1;
 
-        let chunks = {}; // Map "x,z" -> chunk mesh/data
+        let chunks = {};
         let activeChunks = [];
+        let otherPlayers = {}; // { id: mesh }
+
+        // Multiplayer
+        const mp = new MultiplayerClient();
+        const username = localStorage.getItem('username') || 'Guest' + Math.floor(Math.random() * 1000);
 
         // Player state
         let playerPos = new THREE.Vector3(0, 10, 0);
@@ -173,40 +236,42 @@
         const JUMP_FORCE = 0.4;
         const GRAVITY = 0.02;
 
+        // Interaction
+        let selectedBlockType = 'grass';
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+
         // Inputs
         const keys = { w: false, a: false, s: false, d: false, space: false };
-        let mouse = new THREE.Vector2();
-        let raycaster = new THREE.Raycaster();
 
         // Materials
         const materials = {
-            grass: new THREE.MeshLambertMaterial({ color: 0x7cfc00 }),
-            dirt: new THREE.MeshLambertMaterial({ color: 0x8B4513 }),
-            stone: new THREE.MeshLambertMaterial({ color: 0x808080 }),
-            water: new THREE.MeshLambertMaterial({ color: 0x0066cc, transparent: true, opacity: 0.7 }),
-            wood: new THREE.MeshLambertMaterial({ color: 0x5c4033 }),
-            leaves: new THREE.MeshLambertMaterial({ color: 0x228b22 })
+            grass: new THREE.MeshStandardMaterial({ color: 0x5da64e, roughness: 0.8 }),
+            dirt: new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 1.0 }),
+            stone: new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.6 }),
+            sand: new THREE.MeshStandardMaterial({ color: 0xe6cc80, roughness: 0.9 }),
+            wood: new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.8 }),
+            leaves: new THREE.MeshStandardMaterial({ color: 0x228b22, roughness: 0.8 }),
+            player: new THREE.MeshStandardMaterial({ color: 0xff4444, roughness: 0.4 }),
+            otherPlayer: new THREE.MeshStandardMaterial({ color: 0x4444ff, roughness: 0.4 })
         };
 
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87CEEB);
-            // Fog for depth
-            scene.fog = new THREE.Fog(0x87CEEB, 20, 50);
+            scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
 
-            // Renderer Setup with Shadows
+            // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            document.getElementById('container').appendChild(renderer.domElement); // Changed from document.body.appendChild
+            document.getElementById('container').appendChild(renderer.domElement);
 
             // Lighting
-            // Soft global light
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
             scene.add(hemiLight);
 
-            // Sun light with shadows
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
             dirLight.position.set(50, 100, 50);
             dirLight.castShadow = true;
@@ -214,19 +279,16 @@
             dirLight.shadow.mapSize.height = 2048;
             dirLight.shadow.camera.near = 0.5;
             dirLight.shadow.camera.far = 500;
-            // Adjust shadow camera for isometric view coverage
             const d = 50;
-            dirLight.shadow.camera.left = -d;
-            dirLight.shadow.camera.right = d;
-            dirLight.shadow.camera.top = d;
-            dirLight.shadow.camera.bottom = -d;
+            dirLight.shadow.camera.left = -d; dirLight.shadow.camera.right = d;
+            dirLight.shadow.camera.top = d; dirLight.shadow.camera.bottom = -d;
             scene.add(dirLight);
 
             // Camera (Isometric)
             const aspect = window.innerWidth / window.innerHeight;
             const camD = 20;
             camera = new THREE.OrthographicCamera(-camD * aspect, camD * aspect, camD, -camD, 1, 1000);
-            camera.position.set(20, 20, 20); // High angle
+            camera.position.set(20, 20, 20);
             camera.lookAt(scene.position);
 
             // Player Setup
@@ -239,14 +301,120 @@
 
             // Events
             window.addEventListener('resize', onWindowResize);
-            window.addEventListener('keydown', (e) => handleKey(e, true)); // Kept original handler name
-            window.addEventListener('keyup', (e) => handleKey(e, false)); // Kept original handler name
+            window.addEventListener('keydown', (e) => handleKey(e, true));
+            window.addEventListener('keyup', (e) => handleKey(e, false));
+            window.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mousemove', onMouseMove);
 
-            // Start Loop
+            // Inventory
+            document.querySelectorAll('.inv-slot').forEach(slot => {
+                slot.addEventListener('click', () => {
+                    document.querySelectorAll('.inv-slot').forEach(s => s.classList.remove('active'));
+                    slot.classList.add('active');
+                    selectedBlockType = slot.dataset.type;
+                });
+            });
+
+            // Chat
+            const chatInput = document.getElementById('chat-input');
+            chatInput.addEventListener('keydown', (e) => {
+                e.stopPropagation(); // Prevent walking while typing
+                if (e.key === 'Enter' && chatInput.value.trim()) {
+                    mp.sendChat(chatInput.value.trim());
+                    chatInput.value = '';
+                }
+            });
+
+            // Multiplayer Setup
+            setupMultiplayer();
+
             animate();
         }
 
+        function setupMultiplayer() {
+            mp.onPlayerUpdate = (data) => {
+                if (data.id === mp.myId) return;
+
+                let other = otherPlayers[data.id];
+                if (!other) {
+                    const geo = new THREE.BoxGeometry(0.8, 1.8, 0.8);
+                    other = new THREE.Mesh(geo, materials.otherPlayer);
+                    scene.add(other);
+                    otherPlayers[data.id] = other;
+                }
+                other.position.set(data.x, data.y, data.z);
+
+                // Keep name tag logic simple for now (could be added)
+            };
+
+            mp.onPlayerLeft = (id) => {
+                if (otherPlayers[id]) {
+                    scene.remove(otherPlayers[id]);
+                    delete otherPlayers[id];
+                }
+            };
+
+            mp.onChat = (data) => {
+                const chatBox = document.getElementById('chat-messages');
+                const msg = document.createElement('div');
+                msg.className = 'chat-msg';
+                msg.innerHTML = `<span style="color: #00f260; font-weight: bold;">${data.username}:</span> ${data.message}`;
+                chatBox.appendChild(msg);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            };
+
+            mp.connect();
+            mp.joinRoom('minecraft-lobby', { username: username });
+        }
+
+        function onMouseMove(event) {
+            // Update mouse coordinates for raycasting
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function onMouseDown(event) {
+            if (event.target.id !== 'container' && event.target.tagName !== 'CANVAS') return;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            // Get all block meshes from chunks
+            // Optimization: Only check relevant chunks? For now check all
+            let allBlocks = [];
+            for (let key in chunks) {
+                // If using InstancedMesh, this is harder. But we used Group of Meshes in simple logic.
+                allBlocks.push(...chunks[key].children);
+            }
+
+            const intersects = raycaster.intersectObjects(allBlocks);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                const type = event.button === 0 ? 'break' : 'place'; // Left click break, Right click place
+
+                if (type === 'break') {
+                    // Remove block
+                    hit.object.parent.remove(hit.object);
+                } else if (type === 'place') {
+                    // Place block
+                    const normal = hit.face.normal;
+                    const pos = hit.point.clone().add(normal.multiplyScalar(0.5)).floor().addScalar(0.5);
+
+                    const geo = new THREE.BoxGeometry(1, 1, 1);
+                    const mat = materials[selectedBlockType] || materials.grass;
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.position.copy(pos);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+
+                    // Add to same parent as hit object (the chunk group)
+                    hit.object.parent.add(mesh);
+                }
+            }
+        }
+
         function handleKey(e, isDown) {
+            if (document.activeElement.id === 'chat-input') return;
             const code = e.code.toLowerCase();
             if (code === 'keyw') keys.w = isDown;
             if (code === 'keya') keys.a = isDown;
@@ -266,36 +434,98 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
+        // Chunk Loading State
+        let loadingChunks = new Set();
+
+        function getChunkKey(cx, cz) { return `${cx},${cz}`; }
+
+        async function loadChunk(cx, cz) {
+            const key = getChunkKey(cx, cz);
+            if (chunks[key] || loadingChunks.has(key)) return;
+
+            loadingChunks.add(key);
+
+            try {
+                const res = await fetch(`/api/game/chunk?x=${cx}&z=${cz}`);
+                const json = await res.json();
+
+                if (json.data) {
+                    // Load from save
+                    createChunkFromData(cx, cz, json.data);
+                } else {
+                    // Generate new
+                    generateChunk(cx, cz);
+                }
+            } catch (err) {
+                console.error('Chunk load error, falling back to gen', err);
+                generateChunk(cx, cz);
+            } finally {
+                loadingChunks.delete(key);
+            }
+        }
+
+        function createChunkFromData(cx, cz, blocks) {
+            const chunkGroup = new THREE.Group();
+            const geo = new THREE.BoxGeometry(1, 1, 1);
+
+            blocks.forEach(b => {
+                const mat = materials[b.type] || materials.grass;
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(b.x, b.y, b.z);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.userData.type = b.type;
+                chunkGroup.add(mesh);
+            });
+
+            scene.add(chunkGroup);
+            chunks[getChunkKey(cx, cz)] = chunkGroup;
+            document.getElementById('chunk-count').innerText = Object.keys(chunks).length;
+        }
+
+        function saveChunk(cx, cz) {
+            const key = getChunkKey(cx, cz);
+            const group = chunks[key];
+            if (!group) return;
+
+            const blocks = [];
+            group.children.forEach(mesh => {
+                blocks.push({
+                    x: mesh.position.x,
+                    y: mesh.position.y,
+                    z: mesh.position.z,
+                    type: mesh.userData.type || 'grass'
+                });
+            });
+
+            fetch('/api/game/chunk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ x: cx, z: cz, data: blocks })
+            }).catch(e => console.error('Save failed', e));
+        }
+
         function getTerrainHeight(x, z) {
-            // Generate height based on noise
-            // Scale coords for noise
             const scale = 0.05;
             const h = noise2d(x * scale, z * scale);
-            // Map 0-1 to height range 5-15
             return Math.floor(h * 15) + 5;
         }
 
         function generateChunk(cx, cz) {
             const chunkGroup = new THREE.Group();
-            const instances = {}; // Store matrices for instanced rendering later if needed, simple meshes for now
-
-            // Simple optimization: Merge geometries? 
-            // For this demo, we'll just add individual blocks but only surface ones to save performance
+            const geo = new THREE.BoxGeometry(1, 1, 1);
 
             for (let x = 0; x < CHUNK_SIZE; x++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const worldX = cx * CHUNK_SIZE + x;
                     const worldZ = cz * CHUNK_SIZE + z;
-
                     const height = getTerrainHeight(worldX, worldZ);
 
-                    // Surface block
-                    const geo = new THREE.BoxGeometry(1, 1, 1);
-                    const mat = materials.grass;
-                    const mesh = new THREE.Mesh(geo, mat);
+                    // Surface
+                    const mesh = new THREE.Mesh(geo, materials.grass);
                     mesh.position.set(worldX, height, worldZ);
                     mesh.receiveShadow = true;
-                    // mesh.castShadow = true; // Too expensive for all blocks
+                    mesh.userData.type = 'grass';
                     chunkGroup.add(mesh);
 
                     // Dirt below
@@ -303,19 +533,24 @@
                     for (let y = height - 1; y >= dirtHeight; y--) {
                         const dMesh = new THREE.Mesh(geo, materials.dirt);
                         dMesh.position.set(worldX, y, worldZ);
-                        dMesh.castShadow = true; // Added based on instruction
-                        dMesh.receiveShadow = true; // Added based on instruction
+                        dMesh.castShadow = true;
+                        dMesh.receiveShadow = true;
+                        dMesh.userData.type = 'dirt';
                         chunkGroup.add(dMesh);
                     }
 
-                    // Trees (sparse)
+                    // Tree chance
                     if (height > 6 && Math.random() > 0.98) {
                         createTree(chunkGroup, worldX, height + 1, worldZ);
                     }
                 }
             }
-
             scene.add(chunkGroup);
+            chunks[getChunkKey(cx, cz)] = chunkGroup;
+            document.getElementById('chunk-count').innerText = Object.keys(chunks).length;
+
+            // Auto-save generated chunk? Optional. Let's not spam server for interactions only.
+            // saveChunk(cx, cz); 
             return chunkGroup;
         }
 
@@ -323,11 +558,15 @@
             // Trunk
             const trunk = new THREE.Mesh(new THREE.BoxGeometry(0.6, 3, 0.6), materials.wood);
             trunk.position.set(x, y + 1, z);
+            trunk.castShadow = true;
+            trunk.userData.type = 'wood';
             group.add(trunk);
 
             // Leaves
             const leaves = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2, 2.5), materials.leaves);
             leaves.position.set(x, y + 3, z);
+            leaves.castShadow = true;
+            leaves.userData.type = 'leaves';
             group.add(leaves);
         }
 
@@ -340,27 +579,17 @@
                 for (let z = -RENDER_DISTANCE; z <= RENDER_DISTANCE; z++) {
                     const cx = currentChunkX + x;
                     const cz = currentChunkZ + z;
-                    const key = `${cx},${cz}`;
-
-                    if (!chunks[key]) {
-                        chunks[key] = generateChunk(cx, cz);
-                        document.getElementById('chunk-count').innerText = Object.keys(chunks).length;
-                    }
+                    loadChunk(cx, cz);
                 }
             }
-
-            // Optional: Unload far chunks to save memory
-            // (Skipped for simplicity in this demo, but recommended for true infinite)
         }
 
         function checkCollisions(newPos) {
-            // Simple floor collision
             const groundHeight = getTerrainHeight(newPos.x, newPos.z);
-            // Player height is 1.8, origin is center, so feet are at y - 0.9
             if (newPos.y - 0.9 < groundHeight + 0.5) {
                 newPos.y = groundHeight + 0.5 + 0.9;
                 playerVelocity.y = 0;
-                return true; // On ground
+                return true;
             }
             return false;
         }
@@ -368,53 +597,41 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Movement Logic
-            // Camera is at (20, 20, 20) looking at (0,0,0)
-            // Forward (W) should move away from camera -> (-1, 0, -1)
-            // Right (D) should move right of camera -> (1, 0, -1)
-
+            // Movement
             const moveSpeed = SPEED;
-            let dx = 0;
-            let dz = 0;
-
-            // Isometric control mapping
+            let dx = 0; let dz = 0;
             if (keys.w) { dx -= 1; dz -= 1; }
             if (keys.s) { dx += 1; dz += 1; }
             if (keys.a) { dx -= 1; dz += 1; }
             if (keys.d) { dx += 1; dz -= 1; }
 
             if (dx !== 0 || dz !== 0) {
-                // Normalize
                 const len = Math.sqrt(dx * dx + dz * dz);
                 dx /= len; dz /= len;
-
                 player.position.x += dx * moveSpeed;
                 player.position.z += dz * moveSpeed;
+
+                // Sync position
+                mp.sendUpdate({ x: player.position.x, y: player.position.y, z: player.position.z });
             }
 
-            // Gravity & Jumping
+            // Physics
             playerVelocity.y -= GRAVITY;
             player.position.y += playerVelocity.y;
-
             const onGround = checkCollisions(player.position);
-
             if (onGround && keys.space) {
                 playerVelocity.y = JUMP_FORCE;
             }
 
-            // Camera Follow
+            // Camera
             camera.position.x = player.position.x + 20;
             camera.position.z = player.position.z + 20;
-            camera.position.y = player.position.y + 20; // Keep height relative
+            camera.position.y = player.position.y + 20;
             camera.lookAt(player.position);
 
-            // Terrain Generation
             updateChunks();
 
-            // UI Updates
-            document.getElementById('pos-display').innerText =
-                `${Math.round(player.position.x)}, ${Math.round(player.position.z)}`;
-
+            document.getElementById('pos-display').innerText = `${Math.round(player.position.x)}, ${Math.round(player.position.z)}`;
             renderer.render(scene, camera);
         }
 
