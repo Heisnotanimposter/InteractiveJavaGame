@@ -42,6 +42,10 @@ class MultiplayerClient {
                 if (this.onPlayerUpdate) this.onPlayerUpdate(data);
             }
         });
+
+        this.socket.on('chat-message', (data) => {
+            if (this.onChat) this.onChat(data);
+        });
     }
 
     joinRoom(roomId, userData = {}) {
@@ -52,6 +56,12 @@ class MultiplayerClient {
     sendUpdate(state) {
         if (this.socket && this.roomId) {
             this.socket.emit('update-state', { roomId: this.roomId, state });
+        }
+    }
+
+    sendChat(message) {
+        if (this.socket && this.roomId) {
+            this.socket.emit('chat-message', { roomId: this.roomId, message });
         }
     }
 }
