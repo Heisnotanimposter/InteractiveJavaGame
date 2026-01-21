@@ -1,156 +1,185 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const gameRules = document.getElementById('game-rules');
-    const summerImg = new Image();
-    const winterImg = new Image();
-    summerImg.src = 'summer_ball.jpg';
-    winterImg.src = 'winter_ball.jpg';
-    let currentBallImage = summerImg;
-    let bounceCount = 0;
-    let score = 0;
 
-    function drawBall(x, y) {
-        ctx.drawImage(currentBallImage, x - currentBallImage.width / 2, y - currentBallImage.height / 2, currentBallImage.width, currentBallImage.height);
-    }
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    function toggleSeason(season) {
-        document.body.style.backgroundImage = `url('${season}_background.jpg')`;
-        const audio = new Audio(`${season}.mp3`);
-        audio.play();
-        currentBallImage = season === 'summer' ? summerImg : winterImg;
-    }
+let score = 0;
+let health = 100;
+let particles = [];
+let balls = [];
+let gameActive = false;
+let animationId;
+let spawnRate = 1000;
+let lastSpawn = 0;
 
-    // Add event listeners for menu interaction
-    document.getElementById('summer').addEventListener('click', function() {
-        toggleSeason('summer');
-    });
-
-    document.getElementById('winter').addEventListener('click', function() {
-        toggleSeason('winter');
-    });
-
-    function updateScoreAndBounces() {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(`Score: ${score}, Bounces: ${bounceCount}`, canvas.width / 2 - 50, 10);
-    }
-
-    function startGame() {
-        // Game start logic...
-        gameRules.style.display = 'none'; // Hide game rules on start
-    }
-
-    function endGame() {
-        // Game end logic...
-        gameRules.style.display = 'block'; // Show game rules on end
-    }
-
-    // Main game loop...
+// Mouse tracking
+const mouse = { x: 0, y: 0 };
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+window.addEventListener('mousedown', (e) => {
+    checkClick(e.clientX, e.clientY);
 });
 
-document.getElementById('start').addEventListener('click', function() {
-    document.getElementById('menu').style.display = 'none'; // Hide menu
-    setTimeout(showGameRules, 1000); // Delay game rules display
-    startCountdown();
+class Ball {
+    constructor() {
+        // Spawn at random edge
+        if (Math.random() < 0.5) {
+            this.x = Math.random() < 0.5 ? -20 : canvas.width + 20;
+            this.y = Math.random() * canvas.height;
+        } else {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() < 0.5 ? -20 : canvas.height + 20;
+        }
+
+        // Target center
+        const angle = Math.atan2(canvas.height / 2 - this.y, canvas.width / 2 - this.x);
+        const speed = 2 + Math.random() * 2 + (score / 500); // Speed up as score increases
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+
+        this.radius = 10 + Math.random() * 10;
+        this.color = `hsl(${Math.random() * 60 + 180}, 100%, 50%)`; // Cyan/Blueish
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Check collision with center
+        const dist = Math.hypot(this.x - canvas.width / 2, this.y - canvas.height / 2);
+        if (dist < 30) {
+            health -= 10;
+            createParticles(this.x, this.y, '#ff0000');
+            return true; // destroy
+        }
+        return false;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+}
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 5;
+        this.vy = (Math.random() - 0.5) * 5;
+        this.life = 1;
+        this.color = color;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= 0.02;
+    }
+    draw() {
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
+
+function createParticles(x, y, color) {
+    for (let i = 0; i < 10; i++) {
+        particles.push(new Particle(x, y, color));
+    }
+}
+
+function checkClick(x, y) {
+    if (!gameActive) return;
+
+    for (let i = balls.length - 1; i >= 0; i--) {
+        const b = balls[i];
+        const dist = Math.hypot(b.x - x, b.y - y);
+        if (dist < b.radius + 20) { // Forgiving hitbox
+            balls.splice(i, 1);
+            score += 100;
+            createParticles(b.x, b.y, b.color);
+            break; // Destroy one at a time
+        }
+    }
+}
+
+function init() {
+    balls = [];
+    particles = [];
+    score = 0;
+    health = 100;
+    gameActive = true;
+    animate();
+    document.getElementById('ui').style.display = 'none';
+}
+
+function animate(time) {
+    if (!gameActive) return;
+    animationId = requestAnimationFrame(animate);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Trails
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Center Base
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, 30, 0, Math.PI * 2);
+    ctx.fillStyle = `hsl(${120 * (health / 100)}, 100%, 50%)`;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Spawn balls
+    if (time - lastSpawn > spawnRate) {
+        balls.push(new Ball());
+        lastSpawn = time;
+        if (spawnRate > 200) spawnRate -= 5;
+    }
+
+    balls.forEach((b, index) => {
+        if (b.update()) {
+            balls.splice(index, 1);
+        } else {
+            b.draw();
+        }
+    });
+
+    particles.forEach((p, index) => {
+        p.update();
+        if (p.life <= 0) particles.splice(index, 1);
+        else p.draw();
+    });
+
+    // UI
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px Inter, sans-serif';
+    ctx.fillText(`Score: ${score}`, 20, 30);
+    ctx.fillText(`Health: ${health}`, 20, 60);
+
+    if (health <= 0) {
+        gameOver();
+    }
+}
+
+function gameOver() {
+    gameActive = false;
+    cancelAnimationFrame(animationId);
+    document.getElementById('ui').style.display = 'flex';
+    document.getElementById('final-score').innerText = score;
+}
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 });
-function showGameRules() {
-    document.getElementById('game-rules').style.display = 'block';
-    setTimeout(function() {
-        document.getElementById('game-rules').style.display = 'none';
-    }, 5000); // Display game rules for 5 seconds
-}
-
-function startCountdown() {
-    let counter = 5;
-    const countdown = setInterval(function() {
-        document.getElementById('status').innerHTML = counter > 0 ? counter : 'Go!';
-        if (counter === 0) {
-            clearInterval(countdown);
-            startGame(); // Start the game after countdown
-        }
-        counter--;
-    }, 1000);
-}
-
-let barX = 0;
-let barDirection = 1;
-
-function drawBar() {
-    ctx.fillRect(barX, canvas.height - 20, 100, 10); // Draw the bar
-    barX += barDirection * (canvas.width / 120); // Speed calculation for 2 sec one-way
-    if (barX > canvas.width - 100 || barX < 0) {
-        barDirection *= -1; // Change direction
-
-    }
-}
-
-let isGameActive = false;
-
-function createBall() {
-    if (!isGameActive) return;
-
-    let x, y, overlaps;
-    do {
-        overlaps = false;
-        x = Math.random() * canvas.width;
-        y = Math.random() * canvas.height;
-
-        // Check overlap with existing balls
-        for (let ball of balls) {
-            let dx = ball.x - x;
-            let dy = ball.y - y;
-            if (Math.sqrt(dx * dx + dy * dy) < ball.radius * 2) {
-                overlaps = true;
-                break;
-            }
-        }
-    } while (overlaps);
-
-    balls.push(new Ball(x, y));
-}
-
-// Use this flag to control when to start and stop creating balls
-function startGame() {
-    if (isGameActive) return; // Prevent re-starting the game
-    isGameActive = true;
-    document.getElementById('menu').style.display = 'none';
-    showGameRules();
-    startCountdown();
-    ballCreationInterval = setInterval(createBall, 2000);
-}
-
-function endGame() {
-    isGameActive = false;
-    // Clear interval if you store its ID
-}
-
-let ballCreationInterval;
-
-function startGame() {
-    isGameActive = true;
-    ballCreationInterval = setInterval(createBall, 2000);
-}
-
-function endGame() {
-    clearInterval(ballCreationInterval);
-    clearInterval(gameInterval); // Make sure this interval is defined and running your game loop
-    isGameActive = false;
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-    alert("Game over! Your score: " + score); // Display final score
-}
-
-function drawBall(x, y) {
-    if (currentBallImage.complete) {
-        ctx.drawImage(currentBallImage, x - currentBallImage.width / 2, y - currentBallImage.height / 2, currentBallImage.width, currentBallImage.height);
-    }
-}
-
-function Ball(x, y) {
-    this.x = x;
-    this.y = y;
-    this.dx = 2 * (Math.random() - 0.5); // Speed and direction
-    this.dy = 2 * (Math.random() - 0.5); // Speed and direction
-    this.radius = 10; // Default radius
-}
-
-
