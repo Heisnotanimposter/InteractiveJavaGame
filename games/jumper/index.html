@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinite Jumper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
-            background: #222;
+            background: #111;
             color: #fff;
-            font-family: sans-serif;
+            font-family: 'Inter', sans-serif;
             overflow: hidden;
             margin: 0;
             display: flex;
@@ -17,28 +19,39 @@
             justify-content: center;
             height: 100vh;
         }
+
         #container {
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 0 50px rgba(0, 229, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
         }
+
         .controlls {
             margin-top: 20px;
             text-align: center;
-            color: #aaa;
+            color: #888;
+            font-size: 14px;
         }
+
         b {
-            color: #fff;
+            color: #00e5ff;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sketch.js/1.0.0/sketch.min.js"></script>
 </head>
+
 <body>
-    <div id="container"></div> 
-    
+    <div id="container"></div>
+
     <div class="controlls">
-        <p>Jump: <b>CLICK</b> or <b>SPACE</b> or <b>UP</b> or <b>W</b> (Hold to jump higher)</p>
+        <p>Jump: <b>CLICK</b> / <b>SPACE</b> / <b>UP</b> / <b>W</b> (Hold for higher jump)</p>
         <p>(<b>TOUCH</b> works as well)</p>
+        <p><a href="../../index.html"
+                style="color: #666; text-decoration: none; margin-top: 20px; display: inline-block;">← Back to Lobby</a>
+        </p>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
