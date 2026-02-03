@@ -10,18 +10,44 @@ A modern web-based game portal featuring a collection of interactive mini-games.
 4.  **Infinite Jumper**: An endless runner/jumper game.
 5.  **Golf**: A relaxing golf simulation game.
 
-## 🚀 How to Run
+## 🚀 Getting Started
 
-1.  Clone the repository.
-2.  Open `index.html` in a modern web browser.
-3.  Navigate to the game of your choice!
+### Prerequisites
+- Node.js installed on your machine.
+- Git (optional, for cloning).
+
+### Installation & Run
+1.  **Install Dependencies**:
+    Open a terminal in the project folder and run:
+    ```bash
+    npm install
+    ```
+
+2.  **Start the Server**:
+    ```bash
+    npm start
+    ```
+    The server will run on `http://localhost:3000`.
+
+3.  **Play**:
+    Open your browser and navigate to `http://localhost:3000`.
+    - **Login/Register**: Create an account to access community features.
+    - **Multiplayer**: See other users' cursors in real-time on the home page.
+    - **Minecraft Isometric**: Enjoy the polished visual experience.
+
+## 🌟 New Features (v2.0)
+- **Full-Stack Architecture**: Powered by Node.js, Express, and SQLite.
+- **Multiplayer System**: Real-time Socket.io integration (Live Cursor Demo).
+- **Authentication**: Secure user registration and login.
+- **Community Board**: Post messages and interact with other players.
+- **Visual Polish**: Improved lighting and materials in Minecraft Isometric.
+-   **Three.js**: For 3D graphics in Minecraft Web.
+-   **Sketch.js**: For the Infinite Jumper game.
 
 ## 🛠️ Technologies
 
 -   **HTML5 & CSS3**: For structure and styling.
 -   **JavaScript (ES6+)**: For game logic.
--   **Three.js**: For 3D graphics in Minecraft Web.
--   **Sketch.js**: For the Infinite Jumper game.
 
 ## 📁 Project Structure
 
