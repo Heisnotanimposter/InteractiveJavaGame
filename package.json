@@ -1,0 +1,21 @@
+{
+  "name": "interactivejavagame",
+  "version": "1.0.0",
+  "description": "A modern web-based game portal featuring a collection of interactive mini-games.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.3",
+    "sqlite3": "^5.1.7"
+  }
+}

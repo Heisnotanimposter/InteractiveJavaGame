@@ -11,66 +11,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 
-<body>
-    <div class="bg-animation"></div>
+<div class="bg-animation"></div>
 
-    <header>
-        <h1>Interactive Game Hub</h1>
-        <p class="subtitle">Choose your adventure. Experience the next generation of web gaming.</p>
-    </header>
+<!-- UI Overlay -->
+<div style="position: absolute; top: 0; left: 0; padding: 20px; z-index: 10;">
+    <h1 style="margin: 0; font-size: 24px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5);">Interactive Game Hub
+    </h1>
+    <p style="margin: 5px 0 0; color: #ccc;">Use WASD or Arrows to move. Walk into portals to play.</p>
+</div>
 
-    <main>
-        <div class="game-grid">
-            <!-- Minecraft -->
-            <div class="game-card">
-                <div class="card-icon">⛏️</div>
-                <h2 class="game-title">Minecraft Isometric</h2>
-                <p class="game-desc">A unique twist on the classic. Explore an infinite procedurally generated world
-                    with a distinct isometric perspective.</p>
-                <a href="games/minecraft/index.html" class="play-btn">Play Now</a>
-            </div>
+<div style="position: absolute; top: 20px; right: 20px; z-index: 10;">
+    <a href="community.html" class="nav-link"
+        style="color: white; margin-right: 20px; text-decoration: none;">Community</a>
+    <a href="login.html" class="nav-link" style="color: white; text-decoration: none;">Login</a>
+</div>
 
-            <!-- Idle RPG -->
-            <div class="game-card">
-                <div class="card-icon">⚔️</div>
-                <h2 class="game-title">Idle RPG</h2>
-                <p class="game-desc">Embark on an epic journey. Battle monsters, collect loot, and upgrade your stats in
-                    this addictive idle role-playing game.</p>
-                <a href="games/idle-rpg/index.html" class="play-btn">Play Now</a>
-            </div>
+<canvas id="gameCanvas" style="display: block;"></canvas>
 
-            <!-- Ball Interceptor -->
-            <div class="game-card">
-                <div class="card-icon">🎯</div>
-                <h2 class="game-title">Ball Interceptor</h2>
-                <p class="game-desc">Test your reflexes! Intercept balls before they flood the rooms. Fast-paced arcade
-                    action with multiple themes.</p>
-                <a href="games/ball-interceptor/index.html" class="play-btn">Play Now</a>
-            </div>
-
-            <!-- Infinite Jumper -->
-            <div class="game-card">
-                <div class="card-icon">🏃</div>
-                <h2 class="game-title">Infinite Jumper</h2>
-                <p class="game-desc">How high can you go? Jump across platforms, avoid falling, and set new high scores
-                    in this endless runner.</p>
-                <a href="games/jumper/index.html" class="play-btn">Play Now</a>
-            </div>
-
-            <!-- Golf -->
-            <div class="game-card">
-                <div class="card-icon">⛳</div>
-                <h2 class="game-title">Golf</h2>
-                <p class="game-desc">Tee off in this relaxing golf simulation. Master the courses and aim for a
-                    hole-in-one!</p>
-                <a href="games/golf/index.html" class="play-btn">Play Now</a>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Interactive Game Hub. All rights reserved.</p>
-    </footer>
+<!-- Socket.io & Multiplayer -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="assets/js/multiplayer.js"></script>
+<script src="assets/js/lobby.js"></script>
 </body>
 
 </html>
